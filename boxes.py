@@ -35,7 +35,6 @@ def extract_ways(box):
   r = requests.get(url)
 
   ways = []
-  
   data = ET.fromstring(r.text)
 
   it = data.getiterator("way")
@@ -44,10 +43,18 @@ def extract_ways(box):
     if highwayCheck is None:
       continue
 
-    name = el.find(".//tag[@k='name']")
+    name  = el.find(".//tag[@k='name']")
+    if name is None:
+      continue
+    else:
+      name = name.get("v")
 
-    if (name is not None) and (name.get("v") not in ways):
-      ways.append(name.get("v"))          
+    level = highwayCheck.get("v")
+
+    wayInfo = {"name": name, "level": level }
+
+    if name not in [x["name"] for x in ways]:
+      ways.append(wayInfo)
 
   return ways
 
@@ -69,9 +76,8 @@ def process_feature(feature):
     bboxes.append(bbox)
 
   geoinfo["ways"] = []
-
   for box in bboxes:
-    geoinfo["ways"].append(extract_ways(box))
+    geoinfo["ways"] = extract_ways(box)
 
   print("processed \"%s\" - (%d of %d)" % (geoinfo["id"], len(geoinfos), len(json_data["features"])))
 
@@ -85,7 +91,7 @@ fd.close()
 
 geoinfos = []
 
-i = 2
+i = 3
 for feature in json_data["features"]:
   geoinfos.append(process_feature(feature))
   #time.sleep(4)
